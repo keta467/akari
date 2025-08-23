@@ -95,17 +95,23 @@ app.post(
         if (event.type === "message" && event.message.type === "text") {
           const convoKey = keyFromSource(event.source);
           const userText = event.message.text;
-          
+
+          // // デバッグ用ログ
+          // console.log("Source type:", event.source.type);
+          // console.log("Message text:", userText);
+          // console.log("Message object:", JSON.stringify(event.message, null, 2));
+
           // グループ/ルームでは@メンションされたときだけ返信
           if (event.source.type === "group" || event.source.type === "room") {
-            // メンション情報を確認
-            const mentionees = event.message.mention?.mentionees || [];
-            const botUserId = process.env.BOT_USER_ID; // 環境変数に自分のuserIdを設定
-            
-            // 自分がメンションされていなければスキップ
-            const isMentioned = mentionees.some(m => m.userId === botUserId);
-            if (!isMentioned) {
+            // テキストに「@あかり」が含まれているかチェック
+            if (!userText.includes("@あかり")) {
               return;
+            }
+
+            // メンションを除去してから処理を続ける
+            const cleanText = userText.replace(/@あかり/g, "").trim();
+            if (cleanText) {
+              event.message.text = cleanText;
             }
           }
 
@@ -114,11 +120,13 @@ app.post(
 
           let replyText = "";
           try {
-            replyText = await akariPraiseReply({ userText, streak });
+            // グループ/ルームの場合はクリーンなテキストを使用
+            const textForAI = event.message.text;
+            replyText = await akariPraiseReply({ userText: textForAI, streak });
           } catch (e) {
             console.error("OpenAI error:", e);
             // フォールバック
-            replyText = `${streak}日目もおつかれさま！ ${userText}、すごいね！`;
+            replyText = `${streak}日目もおつかれさま！ ${event.message.text}、すごいね！`;
           }
 
           await client.replyMessage({
