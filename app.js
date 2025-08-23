@@ -2,6 +2,7 @@ import express from "express";
 import { middleware, messagingApi } from "@line/bot-sdk";
 import dotenv from "dotenv";
 import OpenAI from "openai";
+import { systemPrompt } from "./systemPrompt.js";
 
 dotenv.config();
 
@@ -62,17 +63,10 @@ function updateStreak(convoKey) {
    - 出力: 1〜2文、日本語、カジュアルで明るい若い女性
 -------------------- */
 async function akariPraiseReply({ userText, streak }) {
-  const system =
-    "あなたの役割: LINEボット『あかり』。20代のカジュアルで明るい若い女性として話します。" +
-    "ユーザーは毎日トレーニング結果を報告します。ねぎらい・賞賛・軽い励ましを返してください。" +
-    "可能なら種目や回数/時間に触れて具体的に褒める。語尾は柔らかく自然体。" +
-    "禁止: 過度な絵文字や不適切表現、事実の改変、長文。" +
-    "出力は日本語で1〜2文。絵文字は0〜2個まで。";
-
   const context = `連続日数(streak): ${streak}`;
 
   const messages = [
-    { role: "system", content: system },
+    { role: "system", content: systemPrompt },
     { role: "system", content: context },
     { role: "user", content: `今日の報告: ${userText}` },
   ];
