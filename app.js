@@ -92,13 +92,15 @@ app.post(
           console.log("Source type:", event.source.type);
           console.log("Message text:", userText);
 
-          // 返答すべきかどうかを判定
-          const shouldReply = await shouldRespond(userText);
-          console.log("Should respond:", shouldReply);
-          
-          if (!shouldReply) {
-            console.log("No reply needed");
-            return;
+          // グループ/ルームの場合のみ返答すべきかチェック
+          if (event.source.type === "group" || event.source.type === "room") {
+            const shouldReply = await shouldRespond(userText);
+            console.log("Should respond:", shouldReply);
+            
+            if (!shouldReply) {
+              console.log("No reply needed");
+              return;
+            }
           }
 
           // 返答メッセージを生成
