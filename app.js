@@ -1,25 +1,32 @@
 import express from "express";
 import { middleware, messagingApi, webhook } from "@line/bot-sdk";
 import dotenv from "dotenv";
+import OpenAI from "openai";
 
 dotenv.config();
 
 const { MessagingApiClient } = messagingApi;
 const app = express();
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-function makeGirlish(text) {
-  const girlishEndings = ['だよ〜', 'なの！', 'だね♪', 'よ〜', 'なのです〜', 'だよね♡'];
-  const randomEnding = girlishEndings[Math.floor(Math.random() * girlishEndings.length)];
-  
-  // 既に語尾がある場合は置き換え、そうでなければ追加
-  let result = text;
-  if (result.endsWith('だ') || result.endsWith('である') || result.endsWith('です') || result.endsWith('ます')) {
-    result = result.replace(/(?:だ|である|です|ます)$/, randomEnding);
-  } else {
-    result += randomEnding;
-  }
-  
-  return result;
+// OpenAI で「女の子っぽい」文体にパラフレーズ
+async function toGirlishByAI(text) {
+  const prompt = [
+    "あなたはカジュアルで明るい若い女性の文体に変換するライターです。",
+    "禁止：過度な絵文字連発・性的/不適切表現・意味の改変。語尾は柔らかく、フレンドリーに。",
+    "敬語は控えめ、砕けすぎない自然体。語尾の例：〜だよ、〜なの、〜だね、〜かな、〜だよね など。",
+    "入力文の意味は維持し、1文〜2文で返答。日本語で出力。",
+    "",
+    `入力: ${text}`,
+    "出力: ",
+  ].join("\n");
+
+  const resp = await openai.responses.create({
+    model: "gpt-4o-mini",
+    input: prompt,
+  });
+  // SDKのヘルパでテキスト取り出し
+  return (resp.output_text || "").trim();
 }
 
 app.post(
@@ -35,11 +42,19 @@ app.post(
       events.map(async (event) => {
         if (event.type === "message" && event.message.type === "text") {
           const originalText = event.message.text;
-          const girlishText = makeGirlish(originalText);
-          
+
+          let replyText = "";
+          try {
+            replyText = await toGirlishByAI(originalText);
+          } catch (e) {
+            console.error("OpenAI error:", e);
+            // フォールバック（失敗時は元の簡易変換で返す）
+            replyText = originalText + "だよ〜";
+          }
+
           await client.replyMessage({
             replyToken: event.replyToken,
-            messages: [{ type: "text", text: girlishText }],
+            messages: [{ type: "text", text: replyText }],
           });
         }
       })
