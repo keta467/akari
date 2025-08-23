@@ -47,3 +47,15 @@
   - `PORT` : サーバーポート (デフォルト 3000)
 
 ---
+
+
+
+OpenAPI
+https://platform.openai.com/docs/api-reference/introduction
+
+
+ラインデベロッパー
+https://developers.line.biz/console/channel/1657625984/messaging-api
+
+デプロイ
+Render
