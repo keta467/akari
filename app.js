@@ -101,6 +101,19 @@ app.post(
         if (event.type === "message" && event.message.type === "text") {
           const convoKey = keyFromSource(event.source);
           const userText = event.message.text;
+          
+          // グループ/ルームでは@メンションされたときだけ返信
+          if (event.source.type === "group" || event.source.type === "room") {
+            // メンション情報を確認
+            const mentionees = event.message.mention?.mentionees || [];
+            const botUserId = process.env.BOT_USER_ID; // 環境変数に自分のuserIdを設定
+            
+            // 自分がメンションされていなければスキップ
+            const isMentioned = mentionees.some(m => m.userId === botUserId);
+            if (!isMentioned) {
+              return;
+            }
+          }
 
           // 連続日数を更新
           const { streak } = updateStreak(convoKey);
