@@ -2,7 +2,7 @@ import express from "express";
 import { middleware, messagingApi } from "@line/bot-sdk";
 import dotenv from "dotenv";
 import OpenAI from "openai";
-import { systemPrompt } from "./systemPrompt.js";
+import { shouldRespondPrompt, buildReplyMessagePrompt } from "./systemPrompt.js";
 
 dotenv.config();
 
@@ -12,42 +12,61 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 
 /* --------------------
-   メッセージ判定と返信生成を同時に行う
-   返信不要の場合はnullを返す
+   返答すべきかどうかを判定
 -------------------- */
-async function generateReplyIfNeeded(userText) {
+async function shouldRespond(userText) {
   const checkPrompt = `
-以下のメッセージに対して、あなたは返信すべきかどうかを判定し、返信する場合はその内容を生成してください。
+以下のメッセージに対して、あなたは返信すべきかどうかを判定してください。
 
 判定基準：
-1. 筋トレ報告メッセージの場合 → 返答メッセージを生成
-2. 明らかに自分(あかり)に対して話しかけている場合 → 返答メッセージを生成  
-3. それ以外 → "NO"
+1. 筋トレ報告メッセージの場合 → YES
+2. 明らかに自分(あかり)に対して話しかけている場合 → YES  
+3. それ以外 → NO
 
 メッセージ: ${userText}
 
-返信する場合は返答メッセージを、返信しない場合は "NO" とだけ答えてください。`;
+"YES" または "NO" のみで答えてください。`;
 
   try {
     const resp = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: shouldRespondPrompt },
         { role: "user", content: checkPrompt }
+      ],
+      max_tokens: 10,
+      temperature: 0
+    });
+    
+    const answer = resp.choices[0].message.content.trim().toUpperCase();
+    return answer === "YES";
+  } catch (e) {
+    console.error("Should respond check error:", e);
+    // エラー時のフォールバック
+    return userText.includes("@あかり") || userText.includes("あかり");
+  }
+}
+
+/* --------------------
+   返答メッセージを生成
+-------------------- */
+async function buildReplyMessage(userText) {
+  try {
+    const resp = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: buildReplyMessagePrompt },
+        { role: "user", content: userText }
       ],
       max_tokens: 200,
       temperature: 0.7
     });
     
-    const answer = resp.choices[0].message.content.trim();
-    return answer === "NO" ? null : answer;
+    return resp.choices[0].message.content.trim();
   } catch (e) {
-    console.error("Reply generation error:", e);
+    console.error("Reply message generation error:", e);
     // エラー時のフォールバック
-    if (userText.includes("@あかり") || userText.includes("あかり")) {
-      return "はい！どうしたの？";
-    }
-    return null;
+    return "はい！どうしたの？";
   }
 }
 
@@ -73,13 +92,18 @@ app.post(
           console.log("Source type:", event.source.type);
           console.log("Message text:", userText);
 
-          // メッセージ判定と返信生成を同時に実行
-          const replyText = await generateReplyIfNeeded(userText);
+          // 返答すべきかどうかを判定
+          const shouldReply = await shouldRespond(userText);
+          console.log("Should respond:", shouldReply);
           
-          if (!replyText) {
+          if (!shouldReply) {
             console.log("No reply needed");
             return;
           }
+
+          // 返答メッセージを生成
+          const replyText = await buildReplyMessage(userText);
+          console.log("Reply text:", replyText);
 
           await client.replyMessage({
             replyToken: event.replyToken,
