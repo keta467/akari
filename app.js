@@ -2,14 +2,16 @@ import express from "express";
 import { middleware, messagingApi } from "@line/bot-sdk";
 import dotenv from "dotenv";
 import OpenAI from "openai";
-import { shouldRespondPrompt, buildReplyMessagePrompt } from "./systemPrompt.js";
+import {
+  shouldRespondPrompt,
+  buildReplyMessagePrompt,
+} from "./systemPrompt.js";
 
 dotenv.config();
 
 const { MessagingApiClient } = messagingApi;
 const app = express();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 
 /* --------------------
    返答すべきかどうかを判定
@@ -29,15 +31,16 @@ async function shouldRespond(userText) {
 
   try {
     const resp = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      // model: "gpt-4o-mini",
+      model: "gpt-5",
       messages: [
         { role: "system", content: shouldRespondPrompt },
-        { role: "user", content: checkPrompt }
+        { role: "user", content: checkPrompt },
       ],
       max_tokens: 10,
-      temperature: 0
+      temperature: 0,
     });
-    
+
     const answer = resp.choices[0].message.content.trim().toUpperCase();
     return answer === "YES";
   } catch (e) {
@@ -56,12 +59,12 @@ async function buildReplyMessage(userText) {
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: buildReplyMessagePrompt },
-        { role: "user", content: userText }
+        { role: "user", content: userText },
       ],
       max_tokens: 200,
-      temperature: 0.7
+      temperature: 0.7,
     });
-    
+
     return resp.choices[0].message.content.trim();
   } catch (e) {
     console.error("Reply message generation error:", e);
@@ -69,7 +72,6 @@ async function buildReplyMessage(userText) {
     return "はい！どうしたの？";
   }
 }
-
 
 /* --------------------
    LINE Webhook
@@ -96,7 +98,7 @@ app.post(
           if (event.source.type === "group" || event.source.type === "room") {
             const shouldReply = await shouldRespond(userText);
             console.log("Should respond:", shouldReply);
-            
+
             if (!shouldReply) {
               console.log("No reply needed");
               return;
