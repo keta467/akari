@@ -25,6 +25,25 @@ console.log("環境変数:", {
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 /* --------------------
+   OpenAI API共通処理
+-------------------- */
+async function callOpenAI(systemPrompt, userPrompt, maxTokens = 200) {
+  try {
+    const response = await openai.responses.create({
+      model: "gpt-5-mini",
+      input: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+    });
+    return response.output_text?.trim() || "";
+  } catch (e) {
+    console.error("[OpenAI API] エラー:", e.message);
+    throw e;
+  }
+}
+
+/* --------------------
    返答すべきかどうかを判定
 -------------------- */
 async function shouldRespond(userText) {
@@ -41,18 +60,9 @@ async function shouldRespond(userText) {
 "YES" または "NO" のみで答えてください。`;
 
   try {
-    const response = await openai.responses.create({
-      model: "gpt-5-mini",
-      input: [
-        { role: "system", content: shouldRespondPrompt },
-        { role: "user", content: checkPrompt },
-      ],
-    });
-
-    const answer = response.output_text.trim().toUpperCase();
-    return answer === "YES";
+    const answer = await callOpenAI(shouldRespondPrompt, checkPrompt, 10);
+    return answer.toUpperCase() === "YES";
   } catch (e) {
-    console.error("[shouldRespond] エラー:", e.message);
     // エラー時のフォールバック
     return userText.includes("@あかり") || userText.includes("あかり");
   }
@@ -63,18 +73,8 @@ async function shouldRespond(userText) {
 -------------------- */
 async function buildReplyMessage(userText) {
   try {
-    const response = await openai.responses.create({
-      model: "gpt-5-mini",
-      input: [
-        { role: "system", content: buildReplyMessagePrompt },
-        { role: "user", content: userText },
-      ],
-    });
-
-    const replyContent = response.output_text;
-    return replyContent;
+    return await callOpenAI(buildReplyMessagePrompt, userText, 200);
   } catch (e) {
-    console.error("[buildReplyMessage] エラー:", e.message);
     // エラー時のフォールバック
     return "はい！どうしたの？";
   }
