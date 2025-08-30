@@ -37,7 +37,7 @@ async function shouldRespond(userText) {
         { role: "system", content: shouldRespondPrompt },
         { role: "user", content: checkPrompt },
       ],
-      max_tokens: 10,
+      max_completion_tokens: 10,
       temperature: 0,
     });
 
@@ -56,12 +56,13 @@ async function shouldRespond(userText) {
 async function buildReplyMessage(userText) {
   try {
     const resp = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      // model: "gpt-4o-mini",
+      model: "gpt-5",
       messages: [
         { role: "system", content: buildReplyMessagePrompt },
         { role: "user", content: userText },
       ],
-      max_tokens: 200,
+      max_completion_tokens: 200,
       temperature: 0.7,
     });
 
