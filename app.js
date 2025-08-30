@@ -38,7 +38,6 @@ async function shouldRespond(userText) {
         { role: "user", content: checkPrompt },
       ],
       max_completion_tokens: 10,
-      temperature: 0,
     });
 
     const answer = resp.choices[0].message.content.trim().toUpperCase();
@@ -63,7 +62,6 @@ async function buildReplyMessage(userText) {
         { role: "user", content: userText },
       ],
       max_completion_tokens: 200,
-      temperature: 0.7,
     });
 
     return resp.choices[0].message.content.trim();
