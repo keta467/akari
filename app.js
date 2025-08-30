@@ -32,7 +32,7 @@ async function shouldRespond(userText) {
   try {
     const resp = await openai.chat.completions.create({
       // model: "gpt-4o-mini",
-      model: "gpt-5",
+      model: "gpt-5-mini",
       messages: [
         { role: "system", content: shouldRespondPrompt },
         { role: "user", content: checkPrompt },
@@ -57,7 +57,7 @@ async function buildReplyMessage(userText) {
   try {
     const resp = await openai.chat.completions.create({
       // model: "gpt-4o-mini",
-      model: "gpt-5",
+      model: "gpt-5-mini",
       messages: [
         { role: "system", content: buildReplyMessagePrompt },
         { role: "user", content: userText },
