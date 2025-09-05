@@ -9,6 +9,7 @@ import {
 
 dotenv.config();
 
+const isPullRequest = process.env.IS_PULL_REQUEST === "true";
 const { MessagingApiClient } = messagingApi;
 const app = express();
 
@@ -20,6 +21,7 @@ console.log("環境変数:", {
     ? "設定済み"
     : "未設定",
   PORT: process.env.PORT || "3000",
+  IS_PULL_REQUEST: process.env.IS_PULL_REQUEST,
 });
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -110,12 +112,15 @@ app.post(
 
           // 返答メッセージを生成
           const replyText = await buildReplyMessage(userText);
-          console.log("→ 返信内容:", replyText);
+          const finalReplyText = isPullRequest
+            ? `${replyText} ぷれびゅ`
+            : replyText;
+          console.log("→ 返信内容:", finalReplyText);
 
           try {
             await client.replyMessage({
               replyToken: event.replyToken,
-              messages: [{ type: "text", text: replyText }],
+              messages: [{ type: "text", text: finalReplyText }],
             });
           } catch (replyError) {
             console.error("[LINE API] 送信エラー:", replyError.message);
