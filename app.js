@@ -9,17 +9,32 @@ import {
 
 dotenv.config();
 
+const isPullRequest = process.env.IS_PULL_REQUEST === "true";
 const { MessagingApiClient } = messagingApi;
 const app = express();
+
+const channelSecret = isPullRequest
+  ? process.env.CHANNEL_SECRET_PREVIEW
+  : process.env.CHANNEL_SECRET;
+const channelAccessToken = isPullRequest
+  ? process.env.CHANNEL_ACCESS_TOKEN_PREVIEW
+  : process.env.CHANNEL_ACCESS_TOKEN;
 
 // 環境変数の確認
 console.log("環境変数:", {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY ? "設定済み" : "未設定",
   CHANNEL_SECRET: process.env.CHANNEL_SECRET ? "設定済み" : "未設定",
+  CHANNEL_SECRET_PREVIEW: process.env.CHANNEL_SECRET_PREVIEW
+    ? "設定済み"
+    : "未設定",
   CHANNEL_ACCESS_TOKEN: process.env.CHANNEL_ACCESS_TOKEN
     ? "設定済み"
     : "未設定",
+  CHANNEL_ACCESS_TOKEN_PREVIEW: process.env.CHANNEL_ACCESS_TOKEN_PREVIEW
+    ? "設定済み"
+    : "未設定",
   PORT: process.env.PORT || "3000",
+  IS_PULL_REQUEST: process.env.IS_PULL_REQUEST,
 });
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -85,10 +100,10 @@ async function buildReplyMessage(userText) {
 -------------------- */
 app.post(
   "/callback",
-  middleware({ channelSecret: process.env.CHANNEL_SECRET }),
+  middleware({ channelSecret }),
   async (req, res) => {
     const client = new MessagingApiClient({
-      channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
+      channelAccessToken,
     });
 
     const events = req.body.events || [];
@@ -110,12 +125,15 @@ app.post(
 
           // 返答メッセージを生成
           const replyText = await buildReplyMessage(userText);
-          console.log("→ 返信内容:", replyText);
+          const finalReplyText = isPullRequest
+            ? `${replyText} ぷれびゅ`
+            : replyText;
+          console.log("→ 返信内容:", finalReplyText);
 
           try {
             await client.replyMessage({
               replyToken: event.replyToken,
-              messages: [{ type: "text", text: replyText }],
+              messages: [{ type: "text", text: finalReplyText }],
             });
           } catch (replyError) {
             console.error("[LINE API] 送信エラー:", replyError.message);

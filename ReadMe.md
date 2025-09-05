@@ -41,8 +41,10 @@
 
 ## 実行環境
 - 環境変数:
-  - `CHANNEL_SECRET` : LINE チャネルシークレット
-  - `CHANNEL_ACCESS_TOKEN` : LINE アクセストークン
+  - `CHANNEL_SECRET` : LINE チャネルシークレット (本番)
+  - `CHANNEL_ACCESS_TOKEN` : LINE アクセストークン (本番)
+  - `CHANNEL_SECRET_PREVIEW` : プレビュー環境用のLINEチャネルシークレット
+  - `CHANNEL_ACCESS_TOKEN_PREVIEW` : プレビュー環境用のLINEアクセストークン
   - `OPENAI_API_KEY` : OpenAI API キー
   - `PORT` : サーバーポート (デフォルト 3000)
 
