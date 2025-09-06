@@ -76,10 +76,12 @@ async function shouldRespond(userText) {
 -------------------- */
 async function buildReplyMessage(userText) {
   try {
-    return await callOpenAI(buildReplyMessagePrompt, userText, 200);
+    const reply = await callOpenAI(buildReplyMessagePrompt, userText, 200);
+    const trimmed = reply.trim();
+    return trimmed.endsWith("にゃん") ? trimmed : trimmed + "にゃん";
   } catch (e) {
     // エラー時のフォールバック
-    return "はい！どうしたの？";
+    return "はい！どうしたの？にゃん";
   }
 }
 
