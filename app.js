@@ -12,6 +12,9 @@ dotenv.config();
 const { MessagingApiClient } = messagingApi;
 const app = express();
 
+const channelSecret = process.env.CHANNEL_SECRET;
+const channelAccessToken = process.env.CHANNEL_ACCESS_TOKEN;
+
 // 環境変数の確認
 console.log("環境変数:", {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY ? "設定済み" : "未設定",
@@ -85,10 +88,10 @@ async function buildReplyMessage(userText) {
 -------------------- */
 app.post(
   "/callback",
-  middleware({ channelSecret: process.env.CHANNEL_SECRET }),
+  middleware({ channelSecret }),
   async (req, res) => {
     const client = new MessagingApiClient({
-      channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
+      channelAccessToken,
     });
 
     const events = req.body.events || [];
