@@ -84,15 +84,18 @@ async function buildReplyMessage(userText) {
     baseReply = "はい！どうしたの？";
   }
 
-  let dataText = "";
+  let userACount = "";
   try {
-    const dataPath = new URL("./data.txt", import.meta.url);
-    dataText = await readFile(dataPath, "utf8");
+    const dataPath = new URL("./data.json", import.meta.url);
+    const jsonText = await readFile(dataPath, "utf8");
+    const { users } = JSON.parse(jsonText);
+    const userA = users.find((u) => u.name === "userA");
+    userACount = userA?.count ?? "";
   } catch (e) {
-    console.error("data.txt 読み込みエラー:", e.message);
+    console.error("data.json 読み込みエラー:", e.message);
   }
 
-  return baseReply + dataText;
+  return baseReply + String(userACount);
 }
 
 /* --------------------
