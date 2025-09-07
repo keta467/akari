@@ -37,6 +37,10 @@
 - 応答は `replyMessage` で送信。
 - `/` に GET すると "OK" を返す。
 
+### 5. ユーザーカウントの参照
+- `data.json` に `users` 配列を定義。`userA`、`userB`、`userC` が `count` (初期値10) を持つ。
+- 返信生成時に `data.json` を読み込み、`userA` の `count` を返信文の末尾に追記。
+
 ---
 
 ## 実行環境
