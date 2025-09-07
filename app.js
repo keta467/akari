@@ -2,6 +2,7 @@ import express from "express";
 import { middleware, messagingApi } from "@line/bot-sdk";
 import dotenv from "dotenv";
 import OpenAI from "openai";
+import { readFile } from "fs/promises";
 import {
   shouldRespondPrompt,
   buildReplyMessagePrompt,
@@ -75,12 +76,23 @@ async function shouldRespond(userText) {
    返答メッセージを生成
 -------------------- */
 async function buildReplyMessage(userText) {
+  let baseReply;
   try {
-    return await callOpenAI(buildReplyMessagePrompt, userText, 200);
+    baseReply = await callOpenAI(buildReplyMessagePrompt, userText, 200);
   } catch (e) {
     // エラー時のフォールバック
-    return "はい！どうしたの？";
+    baseReply = "はい！どうしたの？";
   }
+
+  let dataText = "";
+  try {
+    const dataPath = new URL("./data.txt", import.meta.url);
+    dataText = await readFile(dataPath, "utf8");
+  } catch (e) {
+    console.error("data.txt 読み込みエラー:", e.message);
+  }
+
+  return baseReply + dataText;
 }
 
 /* --------------------
