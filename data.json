@@ -1,0 +1,7 @@
+{
+  "users": [
+    { "name": "userA", "count": 10 },
+    { "name": "userB", "count": 10 },
+    { "name": "userC", "count": 10 }
+  ]
+}
