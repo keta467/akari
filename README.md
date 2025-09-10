@@ -57,6 +57,8 @@
    npm start
    ```
 
+LINE Developers コンソールでのチャネル作成や Webhook 設定などの手順は [LINE_DEVELOPER.md](./LINE_DEVELOPER.md) を参照してください。
+
 ---
 
 ## 参考リンク
