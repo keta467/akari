@@ -38,11 +38,24 @@
   - `OPENAI_API_KEY` : OpenAI API キー
   - `PORT` : サーバーポート (デフォルト 3000)
 
-## 実行方法
-```bash
-npm install
-npm start
-```
+## 開発クイックスタート
+1. Node.js 18 以上をインストール
+2. リポジトリをクローンしてディレクトリに移動
+3. 依存関係をインストール
+   ```bash
+   npm install
+   ```
+4. `.env` に環境変数を設定
+   ```env
+   CHANNEL_SECRET=...
+   CHANNEL_ACCESS_TOKEN=...
+   OPENAI_API_KEY=...
+   PORT=3000
+   ```
+5. サーバーを起動
+   ```bash
+   npm start
+   ```
 
 ---
 
